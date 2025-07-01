@@ -1,0 +1,14 @@
+[package]
+name = "fly_io_challenges"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "echo"
+path = "bin/echo.rs"
+
+[lib]
+name = "fly_io_challenges"
+path = "src/lib.rs"
+
+[dependencies]
