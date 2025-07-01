@@ -62,7 +62,7 @@ impl Node {
     }
 
     pub fn run(self) {
-        println!("Starting Node...");
+        eprintln!("Starting Node...");
         let mut buffer = String::new();
         let stdin = io::stdin();
         loop {
