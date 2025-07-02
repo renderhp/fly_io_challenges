@@ -7,6 +7,10 @@ edition = "2024"
 name = "echo"
 path = "bin/echo.rs"
 
+[[bin]]
+name = "unique_ids"
+path = "bin/unique_ids.rs"
+
 [lib]
 name = "maelstrom"
 path = "src/lib.rs"

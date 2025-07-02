@@ -26,6 +26,7 @@ impl Body {
         match self.payload {
             Payload::Init { .. } => "init",
             Payload::Echo { .. } => "echo",
+            Payload::Generate { .. } => "generate",
             _ => panic!("Not a recognised command"),
         }
     }
@@ -45,6 +46,10 @@ pub enum Payload {
     EchoOk {
         echo: String,
     },
+    Generate {},
+    GenerateOk {
+        id: String,
+    },
 }
 
 pub trait Handler {
@@ -54,20 +59,8 @@ pub trait Handler {
 
 #[derive(Default)]
 pub struct NodeState {
-    node_id: String,
-    neighbours: Vec<String>,
-}
-
-impl NodeState {
-    pub fn set_node_id(&mut self, id: String) {
-        eprintln!("I am node {}", &id);
-        self.node_id = id;
-    }
-
-    pub fn set_node_ids(&mut self, node_ids: Vec<String>) {
-        eprintln!("My neighbours are {:?}", &node_ids);
-        self.neighbours = node_ids;
-    }
+    pub node_id: String,
+    pub neighbours: Vec<String>,
 }
 
 pub struct Node {
@@ -145,8 +138,8 @@ impl Handler for InitHandler {
 
     fn handle(&self, state: &mut NodeState, message: Message) -> Message {
         if let Payload::Init { node_id, node_ids } = message.body.payload {
-            state.set_node_id(node_id);
-            state.set_node_ids(node_ids);
+            state.node_id = node_id;
+            state.neighbours = node_ids;
             Message {
                 src: message.dst,
                 dst: message.src,
