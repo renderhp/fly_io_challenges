@@ -1,3 +1,4 @@
+use core::panic;
 use std::io;
 use std::{collections::HashMap, io::Write};
 
@@ -48,11 +49,30 @@ pub enum Payload {
 
 pub trait Handler {
     fn name(&self) -> &str;
-    fn handle(&self, message: Message) -> Message;
+    fn handle(&self, state: &mut NodeState, message: Message) -> Message;
+}
+
+#[derive(Default)]
+pub struct NodeState {
+    node_id: String,
+    neighbours: Vec<String>,
+}
+
+impl NodeState {
+    pub fn set_node_id(&mut self, id: String) {
+        eprintln!("I am node {}", &id);
+        self.node_id = id;
+    }
+
+    pub fn set_node_ids(&mut self, node_ids: Vec<String>) {
+        eprintln!("My neighbours are {:?}", &node_ids);
+        self.neighbours = node_ids;
+    }
 }
 
 pub struct Node {
     handlers: HashMap<String, Box<dyn Handler>>,
+    state: NodeState,
 }
 
 impl Node {
@@ -61,7 +81,7 @@ impl Node {
         self.handlers.insert(name, handler);
     }
 
-    pub fn run(self) {
+    pub fn run(&mut self) {
         eprintln!("Starting Node...");
         let mut buffer = String::new();
         let stdin = io::stdin();
@@ -76,7 +96,7 @@ impl Node {
                         Ok(message) => {
                             let command = message.body.command();
                             if let Some(handler) = self.handlers.get(command) {
-                                let response = handler.handle(message);
+                                let response = handler.handle(&mut self.state, message);
                                 let mut stdout = io::stdout();
                                 stdout
                                     .write_all(
@@ -110,6 +130,7 @@ impl Default for Node {
         let init_handler = Box::new(InitHandler);
         let mut node = Self {
             handlers: HashMap::new(),
+            state: NodeState::default(),
         };
         node.register(init_handler);
         node
@@ -122,15 +143,21 @@ impl Handler for InitHandler {
         "init"
     }
 
-    fn handle(&self, message: Message) -> Message {
-        Message {
-            src: message.dst,
-            dst: message.src,
-            body: Body {
-                id: message.body.id,
-                in_reply_to: message.body.id,
-                payload: Payload::InitOk {},
-            },
+    fn handle(&self, state: &mut NodeState, message: Message) -> Message {
+        if let Payload::Init { node_id, node_ids } = message.body.payload {
+            state.set_node_id(node_id);
+            state.set_node_ids(node_ids);
+            Message {
+                src: message.dst,
+                dst: message.src,
+                body: Body {
+                    id: message.body.id,
+                    in_reply_to: message.body.id,
+                    payload: Payload::InitOk {},
+                },
+            }
+        } else {
+            panic!("Weird init message");
         }
     }
 }

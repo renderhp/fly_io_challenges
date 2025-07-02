@@ -1,4 +1,4 @@
-use maelstrom::{Body, Handler, Message, Node, Payload};
+use maelstrom::{Body, Handler, Message, Node, NodeState, Payload};
 
 #[derive(Default)]
 struct EchoHandler;
@@ -7,7 +7,7 @@ impl Handler for EchoHandler {
         "echo"
     }
 
-    fn handle(&self, message: Message) -> Message {
+    fn handle(&self, _state: &mut NodeState, message: Message) -> Message {
         let echo_value = match message.body.payload {
             Payload::Echo { echo } => echo,
             _ => panic!("Expected echo payload"),
